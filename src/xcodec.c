@@ -122,10 +122,6 @@ int32_t xcodec_exe(uint8_t *pic_in)
 {
     xcodec_config   *x_config = &g_xcodec_config;
     x264_picture_t	pic_out;
-    x264_nal_t      *nal;
-    int32_t         nNal = -1;
-    int32_t         i = 0;
-    int32_t         copy_count = 0;
     int32_t         ret = RET_SUCCESS;
 
     do
@@ -135,10 +131,12 @@ int32_t xcodec_exe(uint8_t *pic_in)
 
         x_config->picture->i_type = X264_TYPE_AUTO;
 
+        x_config->nNal = -1;
+        x_config->nal = NULL;
 
         //encode a picture
-        if (x264_encoder_encode(x_config->handle, &nal,
-                &nNal, x_config->picture, &pic_out) < 0)
+        if (x264_encoder_encode(x_config->handle, &x_config->nal,
+                &x_config->nNal, x_config->picture, &pic_out) < 0)
         {
             printf("x264_encoder_encode failure\n");
             ret = RET_CODEC_ENCODE_ERROR;
@@ -147,17 +145,6 @@ int32_t xcodec_exe(uint8_t *pic_in)
 
         //update pts
         x_config->picture->i_pts++;
-
-        x_config->out_length = 0;
-
-        //copy the result to the output buffer
-        for (i = 0; i < nNal; i++)
-        {
-            memcpy(x_config->pic_out + copy_count, nal[i].p_payload, nal[i].i_payload);
-            copy_count += nal[i].i_payload;
-            x_config->out_length += nal[i].i_payload;
-        }
-
     }while(0);
 
 
@@ -167,8 +154,31 @@ int32_t xcodec_exe(uint8_t *pic_in)
 
 int32_t xcodec_get_output(uint8_t *pic_out, int32_t *out_length)
 {
+    int32_t         i = 0;
+    int32_t         copy_count = 0;
+    xcodec_config   *x_config = &g_xcodec_config;
+
+    //copy the result to the output buffer
+    for (i = 0; i < nNal; i++)
+    {
+        memcpy(x_config->pic_out + copy_count, nal[i].p_payload, nal[i].i_payload);
+        copy_count += nal[i].i_payload;
+        x_config->out_length += nal[i].i_payload;
+    }
+
     pic_out = (uint8_t *)g_xcodec_config.pic_out;
     *out_length = g_xcodec_config.out_length;
+}
+
+
+x_nal_t* xcodec_get_xnal()
+{
+    xcodec_config *x_config = &g_xcodec_config;
+    x_nal_t     *xnal_out = &x_config->xnal_out;
+
+    ofc_x264nalmode_to_xnalmode(x_config->nal, x_config->nNal, xnal_out);
+
+    return xnal_out;
 }
 
 

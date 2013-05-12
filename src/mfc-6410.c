@@ -68,11 +68,24 @@ int32_t mfc6410_exe(uint8_t *pic_in)
     return ret;
 }
 
+
 int32_t mfc6410_get_output(uint8_t *pic_out, int32_t *out_length)
 {
     pic_out = (uint8_t *)g_mfc6410_config.pic_out;
     *out_length = g_mfc6410_config.out_length;
 }
+
+
+x_nal_t* mfc6410_get_xnal()
+{
+    mfc6410_config  *mfc_config = &g_mfc6410_config;
+    x_nal_t         *xnal_out = &mfc_config->xnal_out;
+
+    ofc_linemode_to_xnalmode(mfc_config->pic_out, mfc_config->out_length, xnal_out);
+
+    return xnal_out;
+}
+
 
 void mfc6410_deinit()
 {

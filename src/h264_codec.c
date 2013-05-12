@@ -54,6 +54,18 @@ int32_t h264_codec_get_output(uint8_t *pic_out, int32_t *out_length)
     return ret;
 }
 
+
+x_nal_t* h264_codec_get_xnal()
+{
+#ifdef VIDEO_CODEC_X264
+    return xcodec_get_xnal();
+#else
+    return mfc6410_get_xnal()
+#endif
+}
+
+
+
 void h264_codec_deinit()
 {
 #ifdef VIDEO_CODEC_X264
